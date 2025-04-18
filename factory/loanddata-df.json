@@ -1,0 +1,9 @@
+{
+	"name": "loanddata-df",
+	"location": "centralindia",
+	"identity": {
+		"type": "SystemAssigned",
+		"principalId": "92425b5e-7124-4a34-9d3b-22c6b256c437",
+		"tenantId": "da4b1c4d-0133-4290-8e8d-0ec6fdb14f87"
+	}
+}
