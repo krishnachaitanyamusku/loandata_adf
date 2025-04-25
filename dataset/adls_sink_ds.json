@@ -1,0 +1,35 @@
+{
+	"name": "adls_sink_ds",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "generic_adls_ls",
+			"type": "LinkedServiceReference"
+		},
+		"parameters": {
+			"folderName": {
+				"type": "string"
+			},
+			"fileName": {
+				"type": "string"
+			}
+		},
+		"annotations": [],
+		"type": "Parquet",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"fileName": {
+					"value": "@dataset().fileName",
+					"type": "Expression"
+				},
+				"folderPath": {
+					"value": "@dataset().folderName",
+					"type": "Expression"
+				},
+				"fileSystem": "bronze-layer"
+			},
+			"compressionCodec": "snappy"
+		},
+		"schema": []
+	}
+}
