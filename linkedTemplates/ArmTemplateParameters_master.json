@@ -1,0 +1,33 @@
+{
+	"$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"factoryName": {
+			"value": "loanddata-df"
+		},
+		"ADB_loandata_ls_accessToken": {
+			"value": ""
+		},
+		"ADLS_sink_generic_ls_accountKey": {
+			"value": ""
+		},
+		"ADLS_source_generic_ls_accountKey": {
+			"value": ""
+		},
+		"ADB_loandata_ls_properties_typeProperties_existingClusterId": {
+			"value": "0506-113535-nejc8wm1"
+		},
+		"ADLS_sink_generic_ls_properties_typeProperties_url": {
+			"value": "https://loandatasa.dfs.core.windows.net/"
+		},
+		"ADLS_source_generic_ls_properties_typeProperties_url": {
+			"value": "https://loanrawblob.dfs.core.windows.net/"
+		},
+		"containerUri": {
+			"value": ""
+		},
+		"containerSasToken": {
+			"value": ""
+		}
+	}
+}
