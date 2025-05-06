@@ -1,0 +1,355 @@
+{
+	"name": "Loandata end to end pipeline",
+	"properties": {
+		"activities": [
+			{
+				"name": "LookupJSON",
+				"type": "Lookup",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "JsonSource",
+						"storeSettings": {
+							"type": "AzureBlobFSReadSettings",
+							"recursive": true,
+							"enablePartitionDiscovery": false
+						},
+						"formatSettings": {
+							"type": "JsonReadSettings"
+						}
+					},
+					"dataset": {
+						"referenceName": "ADLS_JSON_LOOKUP_ds",
+						"type": "DatasetReference"
+					},
+					"firstRowOnly": false
+				}
+			},
+			{
+				"name": "ForEachfile",
+				"type": "ForEach",
+				"dependsOn": [
+					{
+						"activity": "LookupJSON",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"items": {
+						"value": "@activity('LookupJSON').output.value",
+						"type": "Expression"
+					},
+					"activities": [
+						{
+							"name": "RawtoBronze",
+							"type": "Copy",
+							"dependsOn": [],
+							"policy": {
+								"timeout": "0.12:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"source": {
+									"type": "DelimitedTextSource",
+									"storeSettings": {
+										"type": "AzureBlobFSReadSettings",
+										"recursive": true,
+										"enablePartitionDiscovery": false
+									},
+									"formatSettings": {
+										"type": "DelimitedTextReadSettings"
+									}
+								},
+								"sink": {
+									"type": "DelimitedTextSink",
+									"storeSettings": {
+										"type": "AzureBlobFSWriteSettings",
+										"copyBehavior": "PreserveHierarchy"
+									},
+									"formatSettings": {
+										"type": "DelimitedTextWriteSettings",
+										"quoteAllText": true,
+										"fileExtension": ".txt"
+									}
+								},
+								"enableStaging": false,
+								"translator": {
+									"type": "TabularTranslator",
+									"typeConversion": true,
+									"typeConversionSettings": {
+										"allowDataTruncation": true,
+										"treatBooleanAsNumber": false
+									}
+								}
+							},
+							"inputs": [
+								{
+									"referenceName": "ADLS_source_generic_ds",
+									"type": "DatasetReference",
+									"parameters": {
+										"folderName": {
+											"value": "@item().folderName",
+											"type": "Expression"
+										},
+										"fileName": {
+											"value": "@item().fileName",
+											"type": "Expression"
+										}
+									}
+								}
+							],
+							"outputs": [
+								{
+									"referenceName": "ADLS_sink_generic_ls",
+									"type": "DatasetReference",
+									"parameters": {
+										"folderName": {
+											"value": "@item().folderName",
+											"type": "Expression"
+										},
+										"fileName": {
+											"value": "@item().fileName",
+											"type": "Expression"
+										}
+									}
+								}
+							]
+						}
+					]
+				}
+			},
+			{
+				"name": "Customers_data_cleaning",
+				"type": "DatabricksNotebook",
+				"dependsOn": [
+					{
+						"activity": "ForEachfile",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"notebookPath": "/Users/meruguharishreddy@outlook.com/loandata_silver_notebooks/Customers_data_DataCleaning_1"
+				},
+				"linkedServiceName": {
+					"referenceName": "ADB_loandata_ls",
+					"type": "LinkedServiceReference"
+				}
+			},
+			{
+				"name": "loans_data_cleaning",
+				"type": "DatabricksNotebook",
+				"dependsOn": [
+					{
+						"activity": "Customers_data_cleaning",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"notebookPath": "/Users/meruguharishreddy@outlook.com/loandata_silver_notebooks/Loansdata_DataCleaning_2"
+				},
+				"linkedServiceName": {
+					"referenceName": "ADB_loandata_ls",
+					"type": "LinkedServiceReference"
+				}
+			},
+			{
+				"name": "loanrepayment_cleaning",
+				"type": "DatabricksNotebook",
+				"dependsOn": [
+					{
+						"activity": "loans_data_cleaning",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"notebookPath": "/Users/meruguharishreddy@outlook.com/loandata_silver_notebooks/loanrepayment_DataCleaning_3"
+				},
+				"linkedServiceName": {
+					"referenceName": "ADB_loandata_ls",
+					"type": "LinkedServiceReference"
+				}
+			},
+			{
+				"name": "loandefaulters_cleaning",
+				"type": "DatabricksNotebook",
+				"dependsOn": [
+					{
+						"activity": "loanrepayment_cleaning",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"notebookPath": "/Users/meruguharishreddy@outlook.com/loandata_silver_notebooks/Loan_Defaulters_DataCleaning_4"
+				},
+				"linkedServiceName": {
+					"referenceName": "ADB_loandata_ls",
+					"type": "LinkedServiceReference"
+				}
+			},
+			{
+				"name": "loandata_externaltable_gold",
+				"type": "DatabricksNotebook",
+				"dependsOn": [
+					{
+						"activity": "loandefaulters_cleaning",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"notebookPath": "/Users/meruguharishreddy@outlook.com/loandata_gold_notebooks/Loandata_externaltable_1"
+				},
+				"linkedServiceName": {
+					"referenceName": "ADB_loandata_ls",
+					"type": "LinkedServiceReference"
+				}
+			},
+			{
+				"name": "loandata_join_gold",
+				"type": "DatabricksNotebook",
+				"dependsOn": [
+					{
+						"activity": "loandata_externaltable_gold",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"notebookPath": "/Users/meruguharishreddy@outlook.com/loandata_gold_notebooks/Loandata_join_2"
+				},
+				"linkedServiceName": {
+					"referenceName": "ADB_loandata_ls",
+					"type": "LinkedServiceReference"
+				}
+			},
+			{
+				"name": "remove_baddata_clean_gold",
+				"type": "DatabricksNotebook",
+				"dependsOn": [
+					{
+						"activity": "loandata_join_gold",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"notebookPath": "/Users/meruguharishreddy@outlook.com/loandata_gold_notebooks/Loandata_removing_baddata_cleaned_3"
+				},
+				"linkedServiceName": {
+					"referenceName": "ADB_loandata_ls",
+					"type": "LinkedServiceReference"
+				}
+			},
+			{
+				"name": "loan_score_final_gold",
+				"type": "DatabricksNotebook",
+				"dependsOn": [
+					{
+						"activity": "remove_baddata_clean_gold",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"notebookPath": "/Users/meruguharishreddy@outlook.com/loandata_gold_notebooks/Loandata_loanscore_4"
+				},
+				"linkedServiceName": {
+					"referenceName": "ADB_loandata_ls",
+					"type": "LinkedServiceReference"
+				}
+			}
+		],
+		"annotations": []
+	}
+}

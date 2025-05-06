@@ -1,0 +1,29 @@
+{
+	"name": "ADLS_JSON_LOOKUP_ds",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "ADLS_sink_generic_ls",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "Json",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"fileName": "loan_lookup.json",
+				"fileSystem": "rawdata"
+			}
+		},
+		"schema": {
+			"type": "object",
+			"properties": {
+				"folderName": {
+					"type": "string"
+				},
+				"fileName": {
+					"type": "string"
+				}
+			}
+		}
+	}
+}
